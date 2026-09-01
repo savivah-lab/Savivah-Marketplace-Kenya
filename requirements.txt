@@ -5,7 +5,7 @@ asyncpg==0.29.0
 redis==5.0.8
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-bcrypt==4.2.0
+bcrypt==4.0.1
 pydantic==2.9.2
 pydantic-settings==2.5.2
 google-auth==2.34.0
