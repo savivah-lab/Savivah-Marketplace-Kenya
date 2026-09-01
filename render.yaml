@@ -1,0 +1,52 @@
+databases:
+  - name: savivah-db-py
+    plan: free
+    postgresMajorVersion: "16"
+
+services:
+  - type: redis
+    name: savivah-redis
+    plan: free
+    ipAllowList: []
+
+  - type: web
+    name: savivah-backend-py
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: savivah-db-py
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: savivah-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+      - key: ADMIN_FRONTEND_URL
+        sync: false
+      - key: PESAPAL_ENV
+        value: sandbox
+      - key: PESAPAL_CONSUMER_KEY
+        sync: false
+      - key: PESAPAL_CONSUMER_SECRET
+        sync: false
+      - key: PESAPAL_CALLBACK_URL
+        sync: false
+      - key: PESAPAL_IPN_ID
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: FARGO_API_KEY
+        sync: false
+      - key: FARGO_WEBHOOK_SECRET
+        sync: false
