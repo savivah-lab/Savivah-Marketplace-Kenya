@@ -8,7 +8,7 @@ class AdminStats(BaseModel):
     total_orders: int
 
 
-class SellerSummary(BaseModel):
+class SellerSummaryResponse(BaseModel):
     id: uuid.UUID
     name: str
     verified: bool
@@ -17,6 +17,8 @@ class SellerSummary(BaseModel):
     pending_escrow: float
     total_earned: float
     total_orders: int
+    class config:
+        from_attributes=True
 
 
 class PayoutOutResponse(BaseModel):
