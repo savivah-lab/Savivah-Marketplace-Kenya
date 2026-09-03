@@ -19,7 +19,7 @@ class SellerSummary(BaseModel):
     total_orders: int
 
 
-class PayoutOut(BaseModel):
+class PayoutOutResponse(BaseModel):
     id: uuid.UUID
     store_id: uuid.UUID
     store_name: str
