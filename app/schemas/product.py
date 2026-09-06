@@ -1,22 +1,34 @@
 from pydantic import BaseModel
 import uuid
 
-
-class ProductOut(BaseModel):
-    id: uuid.UUID
-    store_id: uuid.UUID
-    store_name: str | None = None
-    store_verified: bool | None = None
+class ProductBase(BaseModel):
     name: str
     description: str | None = None
     category: str | None = None
     price: float
     stock: int
-    image_url: str | None = None
+    imageUrl: str | None = None
+class ProductCreateRequest(ProductBase):
+    pass
+
+
+class ProductOutResponse(ProductBase):
+    id: uuid.UUID
+    store_id: uuid.UUID
+    store_name: str | None = None
+    store_verified: bool | None = None
     status: str
 
     class Config:
         from_attributes = True
+
+class ProductUpdateRequest(ProductBase):
+    status: str | None = None
+
+
+class ProductDelete(ProductBase):
+    pass
+
 
 
 class ProductPage(BaseModel):
@@ -26,23 +38,7 @@ class ProductPage(BaseModel):
     next_cursor: str | None = None
 
 
-class ProductCreateRequest(BaseModel):
-    name: str
-    description: str | None = None
-    category: str | None = None
-    price: float
-    stock: int
-    imageUrl: str | None = None
 
-
-class ProductUpdateRequest(BaseModel):
-    name: str | None = None
-    description: str | None = None
-    category: str | None = None
-    price: float | None = None
-    stock: int | None = None
-    imageUrl: str | None = None
-    status: str | None = None
 
 
 class StoreCreateRequest(BaseModel):
