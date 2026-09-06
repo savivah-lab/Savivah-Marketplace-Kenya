@@ -1,6 +1,25 @@
 from pydantic import BaseModel
 import uuid
 
+class AdminLoginRequest(BaseModel):
+    email: EmailStr
+    fullName: str
+    password: str
+    totpCode: str | None = None  # required once 2FA is enabled for the admin account
+
+
+class AdminOut(BaseModel):
+    id: uuid.UUID
+    fullName: str
+    email: str
+
+
+class AdminTokenResponse(BaseModel):
+    accessToken: str
+    refreshToken: str
+    admin: AdminOut
+    class config:
+        from_attributes=True
 
 class AdminStats(BaseModel):
     commission_earned: float
@@ -19,19 +38,6 @@ class SellerSummaryResponse(BaseModel):
     total_orders: int
     class config:
         from_attributes=True
-
-
-class PayoutOutResponse(BaseModel):
-    id: uuid.UUID
-    store_id: uuid.UUID
-    store_name: str
-    amount: float
-    method: str | None = None
-    payout_account: str | None = None
-    status: str
-
-    class Config:
-        from_attributes = True
 
 
 class DisputeResolveRequest(BaseModel):
