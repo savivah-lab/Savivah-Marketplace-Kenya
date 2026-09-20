@@ -6,8 +6,8 @@ the whole app, only protects specific sensitive endpoints at the
 application layer.
 """
 from fastapi import Request, HTTPException, Depends
-from app.core.redis_client import get_redis
-from app.core.config import settings
+from core.redis_client import get_redis
+from core.config import settings
 
 
 def rate_limit(key_prefix: str, limit: int | None = None):

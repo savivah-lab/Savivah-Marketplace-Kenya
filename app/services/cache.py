@@ -7,7 +7,7 @@ Cache keys include every dimension that affects the response (search term,
 category, cursor) so two different queries can never collide.
 """
 import json
-from app.core.config import settings
+from core.config import settings
 
 
 def _cache_key(search: str | None, category: str | None, cursor: str | None, limit: int) -> str:

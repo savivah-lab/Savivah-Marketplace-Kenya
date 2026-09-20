@@ -11,15 +11,15 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.db import get_db
-from app.deps import get_current_user
-from app.models.user import User
-from app.models.product import Product
-from app.models.order import Order, OrderItem
-from app.models.payment import Payment
-from app.schemas.order import CheckoutRequest, CheckoutResponse
-from app.services import pesapal
-from app.services.escrow import COMMISSION_RATE
+from core.db import get_db
+from deps import get_current_user
+from models.user import User
+from models.product import Product
+from models.order import Order, OrderItem
+from models.payment import Payment
+from schemas.order import CheckoutRequest, CheckoutResponse
+from services import pesapal
+from services.escrow import COMMISSION_RATE
 
 router = APIRouter(prefix="/api", tags=["checkout"])
 

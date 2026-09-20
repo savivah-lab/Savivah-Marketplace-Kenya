@@ -3,15 +3,15 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.db import get_db
-from app.deps import get_current_admin
-from app.models.user import User, AdminUser
-from app.models.store import Store
-from app.models.order import Order
-from app.models.payout import Payout
-from app.models.dispute import Dispute
-from app.schemas.admin import AdminStats, SellerSummary, PayoutOut, DisputeResolveRequest
-from app.services.escrow import release_payout, refund_order
+from core.db import get_db
+from deps import get_current_admin
+from models.user import User, AdminUser
+from models.store import Store
+from models.order import Order
+from models.payout import Payout
+from models.dispute import Dispute
+from schemas.admin import AdminStats, SellerSummaryResponse, PayoutOutResponse, DisputeResolveRequest
+from services.escrow import release_payout, refund_order
 
 router = APIRouter(prefix="/api/admin", tags=["admin"], dependencies=[Depends(get_current_admin)])
 
@@ -39,7 +39,7 @@ async def all_orders(limit: int = Query(default=200, le=500), db: AsyncSession =
     return [{**o.__dict__, "store_name": name} for o, name in rows]
 
 
-@router.get("/sellers", response_model=list[SellerSummary])
+@router.get("/sellers", response_model=list[SellerSummaryResponse])
 async def sellers(db: AsyncSession = Depends(get_db)):
     rows = (await db.execute(
         select(
@@ -54,7 +54,7 @@ async def sellers(db: AsyncSession = Depends(get_db)):
         .order_by(Store.created_at.desc())
     )).all()
     return [
-        SellerSummary(
+        SellerSummaryResponse(
             id=store.id, name=store.name, verified=store.verified,
             owner_name=owner_name, owner_email=owner_email,
             pending_escrow=float(pending), total_earned=float(earned), total_orders=count,
@@ -63,20 +63,20 @@ async def sellers(db: AsyncSession = Depends(get_db)):
     ]
 
 
-@router.get("/payouts", response_model=list[PayoutOut])
+@router.get("/payouts", response_model=list[PayoutOutResponse])
 async def payouts(status: str | None = Query(default=None), db: AsyncSession = Depends(get_db)):
     query = select(Payout, Store.name.label("store_name")).join(Store, Store.id == Payout.store_id)
     if status:
         query = query.where(Payout.status == status)
     rows = (await db.execute(query.order_by(Payout.created_at.desc()).limit(200))).all()
     return [
-        PayoutOut(id=p.id, store_id=p.store_id, store_name=store_name, amount=float(p.amount),
+        PayoutOutResponse(id=p.id, store_id=p.store_id, store_name=store_name, amount=float(p.amount),
                     method=p.method, status=p.status)
         for p, store_name in rows
     ]
 
 
-@router.post("/payouts/{payout_id}/mark-sent", response_model=PayoutOut)
+@router.post("/payouts/{payout_id}/mark-sent", response_model=PayoutOutResponse)
 async def mark_payout_sent(payout_id: uuid.UUID, admin: AdminUser = Depends(get_current_admin), db: AsyncSession = Depends(get_db)):
     """Strong authorization (admin-only route) + audit log: records exactly
     which admin dispatched this payout and when — per the spec's requirement
@@ -90,7 +90,7 @@ async def mark_payout_sent(payout_id: uuid.UUID, admin: AdminUser = Depends(get_
     await db.commit()
     store = await db.get(Store, payout.store_id)
     await db.refresh(payout)
-    return PayoutOut(id=payout.id, store_id=payout.store_id, store_name=store.name,
+    return PayoutOutResponse(id=payout.id, store_id=payout.store_id, store_name=store.name,
                         amount=float(payout.amount), method=payout.method, status=payout.status)
 
 

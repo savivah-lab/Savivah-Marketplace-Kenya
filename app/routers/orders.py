@@ -2,15 +2,15 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.db import get_db
-from app.deps import get_current_user, require_role
-from app.models.user import User
-from app.models.store import Store
-from app.models.order import Order
-from app.models.delivery import Delivery
-from app.models.dispute import Dispute
-from app.schemas.order import ShipRequest, DisputeRequest
-from app.services.escrow import mark_shipped, release_payout
+from core.db import get_db
+from deps import get_current_user, require_role
+from models.user import User
+from models.store import Store
+from models.order import Order
+from models.delivery import Delivery
+from models.dispute import Dispute
+from schemas.order import ShipRequest, DisputeRequest
+from services.escrow import mark_shipped, release_payout
 
 router = APIRouter(prefix="/api", tags=["orders"])
 

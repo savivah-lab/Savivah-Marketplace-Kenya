@@ -4,7 +4,7 @@ is the only place that opens a connection to it. Async engine + session
 factory, used via the get_db() dependency in deps.py.
 """
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from app.core.config import settings
+from core.config import settings
 
 # asyncpg driver — DATABASE_URL should look like:
 #   postgresql+asyncpg://user:pass@host/dbname
@@ -13,7 +13,7 @@ _url = settings.DATABASE_URL
 if _url.startswith("postgresql://"):
     _url = _url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
-engine = create_async_engine(_url, pool_pre_ping=True, pool_size=10, max_overflow=10)
+engine = create_async_engine(_url, pool_pre_ping=True, pool_size=10, max_overflow=20)
 
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 

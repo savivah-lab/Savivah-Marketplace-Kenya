@@ -9,9 +9,9 @@ import uuid
 from fastapi import Depends, HTTPException, Header
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.db import get_db
-from app.core.security import decode_token
-from app.models.user import User, AdminUser
+from core.db import get_db
+from core.security import decode_token
+from models.user import User, AdminUser
 
 
 async def _bearer_token(authorization: str | None = Header(default=None)) -> str:

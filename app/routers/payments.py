@@ -8,11 +8,11 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.db import get_db
-from app.core.config import settings
-from app.models.payment import Payment
-from app.services import pesapal
-from app.services.escrow import confirm_payment_escrow
+from core.db import get_db
+from core.config import settings
+from models.payment import Payment
+from services import pesapal
+from services.escrow import confirm_payment_escrow
 
 router = APIRouter(prefix="/api/payments", tags=["payments"])
 

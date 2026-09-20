@@ -3,14 +3,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
-from app.core.config import settings
-from app.routers import auth, admin_auth, products, stores, checkout, payments, orders, webhooks, admin
-from app.workers.payout_sweep import run_sweep_job
-
+from models.base import Base
+from core.db import engine
+# from core.config import settings
+from routers import auth, admin_auth, products, stores, checkout, payments, orders, webhooks, admin
+from workers.payout_sweep import run_sweep_job
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("savivah.main")
-
 scheduler = AsyncIOScheduler()
 
 
@@ -21,6 +20,10 @@ async def lifespan(app: FastAPI):
     # import time instead (see core/config.py: DATABASE_URL, JWT_SECRET,
     # ADMIN_JWT_SECRET are required fields with no default, so the app
     # simply won't start without them).
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    logger.info("Database tables created/verified")
     scheduler.add_job(run_sweep_job, "interval", minutes=15, id="payout_sweep")
     scheduler.start()
     logger.info("Savivah API starting — payout sweep scheduled every 15 minutes")
@@ -32,7 +35,7 @@ app = FastAPI(title="Savivah API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL, settings.ADMIN_FRONTEND_URL],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -51,4 +54,4 @@ app.include_router(admin.router)
 
 @app.get("/")
 async def health():
-    return {"ok": True}
+    return {"The api is running fine": True}

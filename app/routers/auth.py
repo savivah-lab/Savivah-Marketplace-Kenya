@@ -10,12 +10,12 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.db import get_db
-from app.core.security import hash_password, verify_password, create_access_token
-from app.core.rate_limit import rate_limit
-from app.models.user import User
-from app.schemas.auth import RegisterRequest, LoginRequest, GoogleAuthRequest, TokenResponse, UserOut
-from app.services.google_auth import verify_google_token
+from core.db import get_db
+from core.security import hash_password, verify_password, create_access_token
+from core.rate_limit import rate_limit
+from models.user import User
+from schemas.auth import RegisterRequest, LoginRequest, GoogleAuthRequest, TokenResponse, UserOut
+from services.google_auth import verify_google_token
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 

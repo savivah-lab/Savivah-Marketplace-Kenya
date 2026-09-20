@@ -9,8 +9,8 @@ Celery + Celery Beat instead of APScheduler, without changing anything in
 app/services/escrow.py.
 """
 import logging
-from app.core.db import AsyncSessionLocal
-from app.services.escrow import run_auto_release_sweep
+from core.db import AsyncSessionLocal
+from services.escrow import run_auto_release_sweep
 
 logger = logging.getLogger("savivah.payout_sweep")
 

@@ -8,10 +8,10 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.order import Order
-from app.models.store import Store
-from app.models.dispute import Dispute
-from app.models.payout import Payout
+from models.order import Order
+from models.store import Store
+from models.dispute import Dispute
+from models.payout import Payout
 
 COMMISSION_RATE = 0.10
 AUTO_RELEASE_DAYS = 5

@@ -6,11 +6,11 @@ confirm against Fargo's real API docs before production use.
 from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.db import get_db
-from app.core.config import settings
-from app.models.delivery import Delivery
-from app.schemas.order import FargoWebhookPayload
-from app.services.escrow import mark_delivered_awaiting_release, refund_order
+from core.db import get_db
+from core.config import settings
+from models.delivery import Delivery
+from schemas.order import FargoWebhookPayload
+from services.escrow import mark_delivered_awaiting_release, refund_order
 
 router = APIRouter(prefix="/api/orders/webhooks", tags=["webhooks"])
 

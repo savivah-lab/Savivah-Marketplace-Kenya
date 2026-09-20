@@ -3,14 +3,14 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.db import get_db
-from app.core.redis_client import get_redis
-from app.deps import require_role
-from app.models.user import User
-from app.models.store import Store
-from app.models.product import Product
-from app.schemas.product import StoreCreateRequest, StoreOut, ProductCreateRequest, ProductUpdateRequest, ProductOut
-from app.services.cache import invalidate_product_cache
+from core.db import get_db
+from core.redis_client import get_redis
+from deps import require_role
+from models.user import User
+from models.store import Store
+from models.product import Product
+from schemas.product import StoreCreateRequest, StoreOut, ProductCreateRequest, ProductUpdateRequest, ProductOut
+from services.cache import invalidate_product_cache
 
 router = APIRouter(prefix="/api", tags=["stores"])
 

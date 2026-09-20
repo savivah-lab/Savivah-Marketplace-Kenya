@@ -14,7 +14,7 @@ Flow:
 """
 import time
 import httpx
-from app.core.config import settings
+from core.config import settings
 
 _cached_token: str | None = None
 _cached_token_expiry: float = 0

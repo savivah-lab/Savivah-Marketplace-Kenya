@@ -9,11 +9,11 @@ import pyotp
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.db import get_db
-from app.core.security import verify_password, create_access_token, create_refresh_token, decode_token
-from app.core.rate_limit import rate_limit
-from app.models.user import AdminUser
-from app.schemas.auth import AdminLoginRequest, AdminRefreshRequest, AdminTokenResponse, AdminOut
+from core.db import get_db
+from core.security import verify_password, create_access_token, create_refresh_token, decode_token
+from core.rate_limit import rate_limit
+from models.user import AdminUser
+from schemas.auth import AdminLoginRequest, AdminRefreshRequest, AdminTokenResponse, AdminOut
 
 router = APIRouter(prefix="/api/admin/auth", tags=["admin-auth"])
 

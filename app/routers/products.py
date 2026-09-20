@@ -8,12 +8,12 @@ import uuid
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.db import get_db
-from app.core.redis_client import get_redis
-from app.models.product import Product
-from app.models.store import Store
-from app.schemas.product import ProductOut, ProductPage
-from app.services.cache import get_cached_products, set_cached_products
+from core.db import get_db
+from core.redis_client import get_redis
+from models.product import Product
+from models.store import Store
+from schemas.product import ProductOut, ProductPage
+from services.cache import get_cached_products, set_cached_products
 
 router = APIRouter(prefix="/api/products", tags=["products"])
 

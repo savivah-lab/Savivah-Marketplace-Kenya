@@ -5,7 +5,7 @@ trusted locally.
 """
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
-from app.core.config import settings
+from core.config import settings
 
 _google_request = google_requests.Request()
 
