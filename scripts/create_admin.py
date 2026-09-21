@@ -8,11 +8,13 @@ import asyncio
 import sys
 import os
 import getpass
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from app.core.db import AsyncSessionLocal
-from app.core.security import hash_password
-from app.models.user import AdminUser
+# Same import layout as production (`uvicorn main:app --app-dir app`).
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "app"))
+
+from core.db import AsyncSessionLocal
+from core.security import hash_password
+from models.user import AdminUser
 
 
 async def main():
