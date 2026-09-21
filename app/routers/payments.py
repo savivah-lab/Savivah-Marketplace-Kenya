@@ -3,7 +3,12 @@ Pesapal notifies us two ways (see the connection reference doc, section 3,
 step 4) — both handled here. Both are idempotent: processing the same
 notification twice must never double-confirm an order or create duplicate
 state, since Pesapal explicitly can and does retry/repeat these calls.
+
+Two kinds of payment arrive here:
+  - order payments  (Payment row exists for the tracking id)  -> escrow
+  - seller fees     (SellerApplication has the tracking id)   -> pending_review
 """
+import logging
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
@@ -13,6 +18,9 @@ from core.config import settings
 from models.payment import Payment
 from services import pesapal
 from services.escrow import confirm_payment_escrow
+from services.seller_applications import MERCHANT_REF_PREFIX, mark_application_paid
+
+logger = logging.getLogger("savivah.payments")
 
 router = APIRouter(prefix="/api/payments", tags=["payments"])
 
@@ -23,6 +31,9 @@ async def payment_callback(OrderTrackingId: str, OrderMerchantReference: str, db
     the tab. The IPN below is the reliable path. Per Pesapal's own docs, the
     query params here never carry the actual payment status — always
     re-verify via GetTransactionStatus."""
+    # Only used to choose where to send the browser afterwards, never to
+    # decide whether something was paid.
+    is_seller_fee = OrderMerchantReference.startswith(MERCHANT_REF_PREFIX)
     try:
         status = await pesapal.get_transaction_status(OrderTrackingId)
         if status.get("status_code") == 1:
@@ -31,9 +42,14 @@ async def payment_callback(OrderTrackingId: str, OrderMerchantReference: str, db
             )).scalar_one_or_none()
             if payment:
                 await confirm_payment_escrow(db, payment.order_id)
+            else:
+                await mark_application_paid(db, OrderTrackingId, status.get("amount"))
         description = status.get("payment_status_description", "unknown")
     except Exception:
+        logger.exception("Payment callback failed for %s", OrderTrackingId)
         description = "error"
+    if is_seller_fee:
+        return RedirectResponse(f"{settings.FRONTEND_URL}/?seller_payment={description}")
     return RedirectResponse(f"{settings.FRONTEND_URL}/orders?payment={description}")
 
 
@@ -62,6 +78,9 @@ async def payment_ipn(request: Request, db: AsyncSession = Depends(get_db)):
 
             if status.get("status_code") == 1:
                 await confirm_payment_escrow(db, payment.order_id)
+        elif status.get("status_code") == 1:
+            # Not an order payment: check whether it's a seller registration fee.
+            await mark_application_paid(db, order_tracking_id, status.get("amount"))
 
         # Pesapal requires this exact response shape to acknowledge the IPN.
         return {
@@ -71,6 +90,7 @@ async def payment_ipn(request: Request, db: AsyncSession = Depends(get_db)):
             "status": 200,
         }
     except Exception:
+        logger.exception("Pesapal IPN failed for %s", order_tracking_id)
         return {
             "orderNotificationType": "IPNCHANGE",
             "orderTrackingId": order_tracking_id,
