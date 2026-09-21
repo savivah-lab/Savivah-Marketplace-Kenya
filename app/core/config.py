@@ -8,11 +8,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    # --- Required: server refuses to start without these (see main.py) ---
+    # --- Required: ---
     DATABASE_URL: str
     JWT_SECRET: str
-    ADMIN_JWT_SECRET: str # deliberately separate signing key from customer/seller tokens
-
+    ADMIN_JWT_SECRET: str 
     # --- Server ---
     PORT: int
     FRONTEND_URL: str 
@@ -23,7 +22,7 @@ class Settings(BaseSettings):
     PRODUCT_CACHE_TTL_SECONDS: int = 30
 
     # --- Pesapal ---
-    PESAPAL_ENV: str = "sandbox"  # "sandbox" | "live"
+    PESAPAL_ENV: str
     PESAPAL_CONSUMER_KEY: str = ""
     PESAPAL_CONSUMER_SECRET: str = ""
     PESAPAL_CALLBACK_URL: str = ""
@@ -37,8 +36,8 @@ class Settings(BaseSettings):
     FARGO_WEBHOOK_SECRET: str = ""
 
     # --- Token lifetimes ---
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15          # customer/seller — short-lived per spec
-    ADMIN_ACCESS_TOKEN_EXPIRE_MINUTES: int = 10     # admin — even shorter
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15         
+    ADMIN_ACCESS_TOKEN_EXPIRE_MINUTES: int = 10    
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
     # --- Rate limiting ---
