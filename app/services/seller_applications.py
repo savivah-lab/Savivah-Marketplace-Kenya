@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Optional
 from fastapi import HTTPException
@@ -6,8 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models.seller_application import SellerApplication
 from models.user import User
 
+logger = logging.getLogger("savivah.seller")
+
 # Merchant references for seller fees start with this, so the Pesapal
-# callback/IPN handlers can tell them apart from order payments ("SVH-...").
+# callback can tell them apart from order payments ("SVH-...").
 MERCHANT_REF_PREFIX = "SVA-"
 
 
@@ -40,21 +43,25 @@ async def seller_status_for_user(db: AsyncSession, user: User) -> str:
     return application.status if application else "none"
 
 
-async def mark_application_paid(db: AsyncSession, merchant_reference: str) -> bool:
+async def mark_application_paid(db: AsyncSession, order_tracking_id: str, paid_amount=None) -> bool:
     """
-    Call this from the Pesapal IPN handler AFTER it has confirmed with Pesapal
-    that the payment is COMPLETED. Returns True if the reference belongs to a
-    seller application (so the caller knows it has been handled), else False.
+    Call only AFTER GetTransactionStatus has confirmed the payment is COMPLETED.
+    Matches on Pesapal's tracking id (which we stored ourselves), not on request
+    parameters. Returns True if the tracking id belongs to a seller application.
     Safe to call more than once for the same payment.
     """
     application = (await db.execute(
         select(SellerApplication)
-        .where(SellerApplication.pesapal_merchant_reference == merchant_reference)
+        .where(SellerApplication.pesapal_order_tracking_id == order_tracking_id)
         .with_for_update()
     )).scalar_one_or_none()
     if application is None:
         return False
     if application.status == "pending_payment":
+        if paid_amount is not None and float(paid_amount) < float(application.fee_amount):
+            logger.warning("Seller fee underpaid for application %s: paid %s, expected %s",
+                           application.id, paid_amount, application.fee_amount)
+            return True
         application.status = "pending_review"
         await db.commit()
     return True
