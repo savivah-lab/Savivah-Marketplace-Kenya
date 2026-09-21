@@ -15,11 +15,7 @@ scheduler = AsyncIOScheduler()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Fail fast and loud on missing critical config — same discipline as the
-    # previous Node implementation, just enforced by pydantic-settings at
-    # import time instead (see core/config.py: DATABASE_URL, JWT_SECRET,
-    # ADMIN_JWT_SECRET are required fields with no default, so the app
-    # simply won't start without them).
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
@@ -53,7 +49,7 @@ app.include_router(admin.router)
 
 @app.api_route("/", methods=["GET", "HEAD"])
 async def root():
-    return {"The api is running fine": True}
+    return {"The api is running fine"}
 
 
 @app.get("/health")
