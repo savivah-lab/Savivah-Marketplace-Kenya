@@ -11,26 +11,29 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.db import get_db
-from services.seller_applications import seller_status_for_user
 from core.security import hash_password, verify_password, create_access_token
 from core.rate_limit import rate_limit
 from models.user import User
 from schemas.auth import RegisterRequest, LoginRequest, GoogleAuthRequest, TokenResponse, UserOut
 from services.google_auth import verify_google_token
+from services.seller_applications import seller_status_for_user
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
-def _issue(user: User) -> TokenResponse:
+async def _issue(user: User, db: AsyncSession) -> TokenResponse:
     token = create_access_token({"sub": str(user.id), "role": user.role, "email": user.email})
     return TokenResponse(token=token, user=UserOut(
         id=user.id, fullName=user.full_name, email=user.email, role=user.role, avatarUrl=user.avatar_url,
+        sellerStatus=await seller_status_for_user(db, user),
     ))
 
 
 @router.post("/register", response_model=TokenResponse, dependencies=[Depends(rate_limit("register"))])
 async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
-    role = "seller" if body.role == "seller" else "customer"
+    # Everyone starts as a customer. Seller access is granted only by admin
+    # approval of a paid seller application (see routers/seller.py).
+    role = "customer"
     user = User(
         full_name=body.fullName, email=body.email, phone_number=body.phoneNumber,
         password_hash=hash_password(body.password), role=role,
@@ -42,7 +45,7 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
         await db.rollback()
         raise HTTPException(status_code=409, detail="Email or phone already registered")
     await db.refresh(user)
-    return _issue(user)
+    return await _issue(user, db)
 
 
 @router.post("/login", response_model=TokenResponse, dependencies=[Depends(rate_limit("login"))])
@@ -50,7 +53,7 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
     user = (await db.execute(select(User).where(User.email == body.email))).scalar_one_or_none()
     if not user or not verify_password(body.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
-    return _issue(user)
+    return await _issue(user, db)
 
 
 @router.post("/google", response_model=TokenResponse, dependencies=[Depends(rate_limit("google_auth"))])
@@ -67,7 +70,7 @@ async def google_auth(body: GoogleAuthRequest, db: AsyncSession = Depends(get_db
     )).scalar_one_or_none()
 
     if not user:
-        role = "seller" if body.role == "seller" else "customer"
+        role = "customer"
         user = User(
             full_name=payload.get("name", payload["email"]), email=payload["email"],
             phone_number=None, password_hash=None, role=role,
@@ -81,4 +84,4 @@ async def google_auth(body: GoogleAuthRequest, db: AsyncSession = Depends(get_db
         user.avatar_url = user.avatar_url or payload.get("picture")
         await db.commit()
 
-    return _issue(user)
+    return await _issue(user, db)
