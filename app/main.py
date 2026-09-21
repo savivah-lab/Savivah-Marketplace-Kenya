@@ -51,7 +51,12 @@ app.include_router(orders.router)
 app.include_router(webhooks.router)
 app.include_router(admin.router)
 
-
-@app.get("/")
-async def health():
+@app.api_route("/", methods=["GET", "HEAD"])
+async def root():
     return {"The api is running fine": True}
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
