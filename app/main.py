@@ -6,7 +6,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from models.base import Base
 from core.db import engine
 # from core.config import settings
-from routers import auth, admin_auth, products, stores, checkout, payments, orders, webhooks, admin
+from routers import auth, admin_auth, products, stores, checkout, payments, orders, webhooks, admin, seller
 from workers.payout_sweep import run_sweep_job
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("savivah.main")
@@ -46,6 +46,7 @@ app.include_router(payments.router)
 app.include_router(orders.router)
 app.include_router(webhooks.router)
 app.include_router(admin.router)
+app.include_router(seller.router)
 
 @app.api_route("/", methods=["GET", "HEAD"])
 async def root():
