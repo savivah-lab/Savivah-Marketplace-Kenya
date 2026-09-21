@@ -26,6 +26,7 @@ class UserOut(BaseModel):
     email: str
     role: str
     avatarUrl: str | None = None
+    sellerStatus: str = "none"
 
 
 class TokenResponse(BaseModel):
