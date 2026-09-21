@@ -1,96 +1,39 @@
 """
-Seller onboarding. A customer submits an application, pays the registration
-fee through Pesapal, and an admin then approves or rejects it. Approval is what
-flips users.role to "seller" -- nothing here (or in auth.py) lets a user grant
-themselves that role.
+A customer's application to become a seller. One row per application; the
+latest row for a user decides their sellerStatus.
+
+Status flow:
+    pending_payment -> pending_review -> approved | rejected
+A rejected user may apply again (creates a new row).
 """
-import time
 import uuid
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from core.db import get_db
-from deps import get_current_user
+from sqlalchemy import Column, DateTime, ForeignKey, Numeric, String, Text, func
+from sqlalchemy.dialects.postgresql import UUID
+from models.base import Base
 from models.user import User
-from models.seller_application import SellerApplication
-from schemas.seller import SellerApplicationRequest, SellerApplicationResponse, SellerApplicationStatus
-from services import pesapal
-from services.seller_applications import MERCHANT_REF_PREFIX, latest_application, registration_fee
-
-router = APIRouter(prefix="/api/seller", tags=["seller"])
 
 
-@router.post("/applications", response_model=SellerApplicationResponse)
-async def submit_application(
-    body: SellerApplicationRequest,
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    if user.role == "seller":
-        raise HTTPException(status_code=400, detail="This account is already a seller")
-    fee = registration_fee()
+class SellerApplication(Base):
+    __tablename__ = "seller_applications"
 
-    existing = await latest_application(db, user.id)
-    if existing and existing.status == "pending_review":
-        raise HTTPException(status_code=409, detail="Your application is already under review")
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # Reuse the exact type and table of users.id so the foreign key always matches.
+    user_id = Column(User.__table__.c.id.type, ForeignKey(User.__table__.c.id), nullable=False, index=True)
 
-    if existing and existing.status == "pending_payment":
-        application = existing  # user closed the Pesapal tab earlier: update details and retry payment
-    else:
-        application = SellerApplication(id=uuid.uuid4(), user_id=user.id, status="pending_payment")
-        db.add(application)
+    full_name = Column(String(120), nullable=False)
+    email = Column(String(255), nullable=False)
+    phone_number = Column(String(20), nullable=False)
+    identification_type = Column(String(20), nullable=False)      # national_id | passport
+    identification_number = Column(String(50), nullable=False)   # sensitive: never return in API responses
+    business_name = Column(String(160), nullable=False)
+    business_registration_number = Column(String(60), nullable=True)
+    product_permit = Column(String(120), nullable=False)
 
-    application.full_name = body.fullName
-    application.email = body.email
-    application.phone_number = body.phoneNumber
-    application.identification_type = body.identificationType
-    application.identification_number = body.identificationNumber
-    application.business_name = body.businessName
-    application.business_registration_number = body.businessRegistrationNumber or None
-    application.product_permit = body.productPermit
-    application.fee_amount = fee
+    status = Column(String(30), nullable=False, default="pending_payment", index=True)
+    fee_amount = Column(Numeric(10, 2), nullable=False)
+    pesapal_merchant_reference = Column(String(64), unique=True, index=True, nullable=True)
+    pesapal_order_tracking_id = Column(String(64), nullable=True)
+    reviewer_note = Column(Text, nullable=True)
 
-    application_id = application.id
-    merchant_reference = f"{MERCHANT_REF_PREFIX}{str(application_id)[:8]}-{int(time.time() * 1000)}"
-    application.pesapal_merchant_reference = merchant_reference
-
-    # Commit BEFORE calling Pesapal, same rule as checkout: a Pesapal outage
-    # must never lose the application the user just filled in.
-    await db.commit()
-
-    first_name, *rest = (body.fullName or "Savivah Seller").split(" ")
-    last_name = " ".join(rest) or first_name
-
-    try:
-        pesapal_order = await pesapal.submit_order_request(
-            merchant_reference=merchant_reference, amount=fee,
-            description="Savivah seller registration fee",
-            email=body.email, phone=body.phoneNumber, first_name=first_name, last_name=last_name,
-        )
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Payment provider error: {e}")
-
-    application = (await db.execute(
-        select(SellerApplication).where(SellerApplication.id == application_id)
-    )).scalar_one()
-    application.pesapal_order_tracking_id = pesapal_order["order_tracking_id"]
-    await db.commit()
-
-    return SellerApplicationResponse(
-        message="Application saved. Complete the registration fee payment on Pesapal to submit it for review.",
-        applicationId=application_id,
-        status="pending_payment",
-        redirectUrl=pesapal_order["redirect_url"],
-    )
-
-
-@router.get("/applications/me", response_model=SellerApplicationStatus)
-async def my_application(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
-    if user.role == "seller":
-        return SellerApplicationStatus(status="approved")
-    application = await latest_application(db, user.id)
-    if not application:
-        return SellerApplicationStatus(status="none")
-    return SellerApplicationStatus(
-        status=application.status, submittedAt=application.created_at, reviewerNote=application.reviewer_note,
-    )
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
