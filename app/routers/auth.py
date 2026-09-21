@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.db import get_db
+from services.seller_applications import seller_status_for_user
 from core.security import hash_password, verify_password, create_access_token
 from core.rate_limit import rate_limit
 from models.user import User
