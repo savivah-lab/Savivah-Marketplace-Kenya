@@ -9,17 +9,17 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     # --- Required: server refuses to start without these (see main.py) ---
-    DATABASE_URL: str="postgresql://postgres:john@localhost:5432/netcorex"
-    JWT_SECRET: str="john"
-    ADMIN_JWT_SECRET: str ="5fguu77i" # deliberately separate signing key from customer/seller tokens
+    DATABASE_URL: str
+    JWT_SECRET: str
+    ADMIN_JWT_SECRET: str # deliberately separate signing key from customer/seller tokens
 
     # --- Server ---
-    PORT: int = 8000
-    FRONTEND_URL: str = "http://localhost:5173"
-    ADMIN_FRONTEND_URL: str = "http://localhost:5174"
+    PORT: int
+    FRONTEND_URL: str 
+    ADMIN_FRONTEND_URL: str
 
-    # --- Redis (cache + rate limiting; NEVER authoritative for money/stock) ---
-    REDIS_URL: str = "redis://localhost:6379/0"
+    # --- Redis  ---
+    REDIS_URL: str
     PRODUCT_CACHE_TTL_SECONDS: int = 30
 
     # --- Pesapal ---
