@@ -13,6 +13,7 @@ class ProductOut(BaseModel):
     price: float
     stock: int
     image_url: str | None = None
+    image_urls: list[str] | None = None
     status: str
 
     class Config:
@@ -33,6 +34,7 @@ class ProductCreateRequest(BaseModel):
     price: float
     stock: int
     imageUrl: str | None = None
+    imageUrls: list[str] | None = None
 
 
 class ProductUpdateRequest(BaseModel):
@@ -42,6 +44,7 @@ class ProductUpdateRequest(BaseModel):
     price: float | None = None
     stock: int | None = None
     imageUrl: str | None = None
+    imageUrls: list[str] | None = None
     status: str | None = None
 
 
