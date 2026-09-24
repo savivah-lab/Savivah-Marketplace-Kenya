@@ -177,3 +177,4 @@ async def reject_seller_application(
     application.reviewer_note = body.note
     await db.commit()
     return {"ok": True}
+    
