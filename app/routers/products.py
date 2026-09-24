@@ -64,7 +64,7 @@ async def list_products(
     has_more = len(rows) > limit
     rows = rows[:limit]
 
-       items = [
+    items = [
         ProductOut(
             id=p.id, store_id=p.store_id, store_name=store_name, store_verified=store_verified,
             name=p.name, description=p.description, category=p.category,
