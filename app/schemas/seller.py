@@ -28,7 +28,9 @@ class SellerApplicationStatus(BaseModel):
     status: str
     submittedAt: Optional[datetime] = None
     reviewerNote: Optional[str] = None
-    class SellerApplicationAdminOut(BaseModel):
+
+
+class SellerApplicationAdminOut(BaseModel):
     id: uuid.UUID
     userId: uuid.UUID
     fullName: str
