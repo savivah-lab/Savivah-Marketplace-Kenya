@@ -12,7 +12,9 @@ from models.payout import Payout
 from models.dispute import Dispute
 from schemas.admin import AdminStats, SellerSummaryResponse, PayoutOutResponse, DisputeResolveRequest
 from services.escrow import release_payout, refund_order
-
+from models.seller_application import SellerApplication
+from schemas.seller import SellerApplicationAdminOut, SellerApplicationDecision
+from services.seller_applications import list_applications
 router = APIRouter(prefix="/api/admin", tags=["admin"], dependencies=[Depends(get_current_admin)])
 
 
@@ -123,4 +125,55 @@ async def resolve_dispute(
     else:
         await release_payout(db, dispute.order_id)
 
+    return {"ok": True}
+
+
+@router.get("/seller-applications", response_model=list[SellerApplicationAdminOut])
+async def seller_applications(status: str | None = Query(default=None), db: AsyncSession = Depends(get_db)):
+    apps = await list_applications(db, status)
+    return [
+        SellerApplicationAdminOut(
+            id=a.id, userId=a.user_id, fullName=a.full_name, email=a.email, phoneNumber=a.phone_number,
+            identificationType=a.identification_type, identificationNumber=a.identification_number,
+            businessName=a.business_name, businessRegistrationNumber=a.business_registration_number,
+            productPermit=a.product_permit, status=a.status, feeAmount=float(a.fee_amount), createdAt=a.created_at,
+        )
+        for a in apps
+    ]
+
+
+@router.post("/seller-applications/{application_id}/approve")
+async def approve_seller_application(
+    application_id: uuid.UUID, body: SellerApplicationDecision,
+    admin: AdminUser = Depends(get_current_admin), db: AsyncSession = Depends(get_db),
+):
+    application = await db.get(SellerApplication, application_id)
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+    if application.status != "pending_review":
+        raise HTTPException(status_code=400, detail=f"Cannot approve an application with status '{application.status}'")
+
+    application.status = "approved"
+    application.reviewer_note = body.note
+    user = await db.get(User, application.user_id)
+    if user:
+        user.role = "seller"
+    await db.commit()
+    return {"ok": True}
+
+
+@router.post("/seller-applications/{application_id}/reject")
+async def reject_seller_application(
+    application_id: uuid.UUID, body: SellerApplicationDecision,
+    admin: AdminUser = Depends(get_current_admin), db: AsyncSession = Depends(get_db),
+):
+    application = await db.get(SellerApplication, application_id)
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+    if application.status != "pending_review":
+        raise HTTPException(status_code=400, detail=f"Cannot reject an application with status '{application.status}'")
+
+    application.status = "rejected"
+    application.reviewer_note = body.note
+    await db.commit()
     return {"ok": True}
