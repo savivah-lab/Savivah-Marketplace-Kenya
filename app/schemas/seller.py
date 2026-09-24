@@ -28,3 +28,21 @@ class SellerApplicationStatus(BaseModel):
     status: str
     submittedAt: Optional[datetime] = None
     reviewerNote: Optional[str] = None
+    class SellerApplicationAdminOut(BaseModel):
+    id: uuid.UUID
+    userId: uuid.UUID
+    fullName: str
+    email: str
+    phoneNumber: str
+    identificationType: str
+    identificationNumber: str
+    businessName: str
+    businessRegistrationNumber: Optional[str] = None
+    productPermit: str
+    status: str
+    feeAmount: float
+    createdAt: datetime
+
+
+class SellerApplicationDecision(BaseModel):
+    note: Optional[str] = Field(default=None, max_length=500)
