@@ -65,6 +65,8 @@ async def mark_application_paid(db: AsyncSession, order_tracking_id: str, paid_a
         application.status = "pending_review"
         await db.commit()
     return True
+
+
 async def list_applications(db: AsyncSession, status: Optional[str] = None):
     query = select(SellerApplication).order_by(SellerApplication.created_at.desc())
     if status:
