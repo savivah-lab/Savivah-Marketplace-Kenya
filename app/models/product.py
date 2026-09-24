@@ -4,7 +4,7 @@ from sqlalchemy import String, Text, Boolean, Numeric, Integer, DateTime, Foreig
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from models.base import Base
-
+from sqlalchemy import ARRAY
 
 class Product(Base):
     __tablename__ = "products"
@@ -21,3 +21,4 @@ class Product(Base):
     featured_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="active")  # active|hidden|out_of_stock
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    image_urls: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
