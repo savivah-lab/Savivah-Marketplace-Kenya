@@ -17,7 +17,7 @@ from models.user import User
 from schemas.auth import RegisterRequest, LoginRequest, GoogleAuthRequest, TokenResponse, UserOut
 from services.google_auth import verify_google_token
 from services.seller_applications import seller_status_for_user
-
+from deps import get_current_user
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
