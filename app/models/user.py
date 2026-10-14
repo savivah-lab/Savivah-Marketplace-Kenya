@@ -12,7 +12,7 @@ class User(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     full_name: Mapped[str] = mapped_column(Text, nullable=False)
     email: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
-    phone_number: Mapped[str | None] = mapped_column(Text, unique=True, nullable=True)
+    phone_number: Mapped[str | None] = mapped_column(Text, nullable=True)
     password_hash: Mapped[str | None] = mapped_column(Text, nullable=True)  # null for Google-only accounts
     role: Mapped[str] = mapped_column(String(20), nullable=False, default="customer")  # customer|seller
     # NOTE: 'admin' is intentionally NOT a possible value here anymore — see
