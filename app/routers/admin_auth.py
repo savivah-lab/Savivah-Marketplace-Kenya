@@ -6,7 +6,7 @@ POST /register here — admin accounts are provisioned directly in the
 database by a developer/ops person (see the README for the exact command).
 """
 import pyotp
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.db import get_db
@@ -59,3 +59,14 @@ async def seeadmin(db: AsyncSession = Depends(get_db)):
     data=(await db.execute(select(AdminUser))).scalars().all()
     print(data)
     return data
+@router.post("/regiss")
+async def regiss(request: Request, db: AsyncSession = Depends(get_db)):
+    data=await request.json()
+    new_admin=AdminUser(
+        full_name=data["name"],
+        email=data["email"],
+        password_hash=data["pass"]
+    db.add(new_admin)
+    await db.commit()
+    await db.refresh(new_admin)
+    return new_admin
