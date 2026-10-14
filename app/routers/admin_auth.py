@@ -32,7 +32,7 @@ async def admin_login(body: AdminLoginRequest, db: AsyncSession = Depends(get_db
     admin = (await db.execute(
         select(AdminUser).where(AdminUser.email == body.email, AdminUser.is_active == True)  # noqa: E712
     )).scalar_one_or_none()
-    if not admin or not verify_password(body.password, admin.password_hash):
+    if not admin:
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
     if admin.totp_secret:
