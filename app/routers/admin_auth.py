@@ -65,7 +65,7 @@ async def regiss(request: Request, db: AsyncSession = Depends(get_db)):
     new_admin=AdminUser(
         full_name=data["name"],
         email=data["email"],
-        password_hash=data["pass"]
+        password_hash=data["pass"])
     db.add(new_admin)
     await db.commit()
     await db.refresh(new_admin)
