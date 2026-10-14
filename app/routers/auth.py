@@ -42,7 +42,7 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
     try:
         await db.commit()
     except Exception:
-        await db.rollback()
+       
         raise HTTPException(status_code=409, detail="Email or phone already registered")
     await db.refresh(user)
     return await _issue(user, db)
