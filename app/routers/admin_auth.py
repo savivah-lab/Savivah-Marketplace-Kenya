@@ -56,6 +56,6 @@ async def admin_refresh(body: AdminRefreshRequest, db: AsyncSession = Depends(ge
     return _issue(admin)
 @router.get("")
 async def seeadmin(db: AsyncSession = Depends(get_db))
-    data=(await db.execute(select(AdminUser)))
+    data=(await db.execute(select(AdminUser))).scalar_one_or_none()
     print(data)
     return{data}
