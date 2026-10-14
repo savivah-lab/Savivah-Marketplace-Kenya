@@ -55,7 +55,7 @@ async def admin_refresh(body: AdminRefreshRequest, db: AsyncSession = Depends(ge
         raise HTTPException(status_code=401, detail="Admin account no longer active")
     return _issue(admin)
 @router.get("")
-async def seeadmin(db: AsyncSession = Depends(get_db))
-    data=(await db.execute(select(AdminUser))).scalar_one_or_none()
+async def seeadmin(db: AsyncSession = Depends(get_db)):
+    data=(await db.execute(select(AdminUser)))..scalars().all()
     print(data)
-    return{data}
+    return data
