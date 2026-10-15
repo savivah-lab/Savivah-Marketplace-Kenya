@@ -31,18 +31,20 @@ async def _issue(user: User, db: AsyncSession) -> TokenResponse:
 
 @router.post("/register", response_model=TokenResponse, dependencies=[Depends(rate_limit("register"))])
 async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
-    # Everyone starts as a customer. Seller access is granted only by admin
-    # approval of a paid seller application (see routers/seller.py).
-    role = "customer"
+    role = "seller" if body.role == "seller" else "customer"
     user = User(
         full_name=body.fullName, email=body.email, phone_number=body.phoneNumber,
         password_hash=hash_password(body.password), role=role,
     )
     db.add(user)
-    db.commit()
-    db.refresh(user)
+    try:
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise HTTPException(status_code=409, detail="Email or phone already registered")
+    await db.refresh(user)
+    return _issue(user)
 
-    return await _issue(user, db)
 
 
 @router.post("/login", response_model=TokenResponse, dependencies=[Depends(rate_limit("login"))])
