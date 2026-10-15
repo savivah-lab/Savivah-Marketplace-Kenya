@@ -14,5 +14,5 @@ async def reset(data:resetdata, db: AsyncSession=Depends(get_db)):
         return data
         raise HTTPException(status_code=404, detail="Not Found")
     password_hash=hash_password(data.password)
-    await db.execute(update(User).where(User.email==data.email).values(password=password_hash))
+    await db.execute(update(User).where(User.email==data.email).values(password_hash=password_hash))
     await db.commit()
