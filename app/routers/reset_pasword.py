@@ -8,11 +8,10 @@ from models.user import User
 
 router=APIRouter(prefix="/api/reset", tags=["reset"])
 @router.post("")
-async def reset(data:resetdata, db: AsyncSession=Depends(get_db)):
-    data=(await db.execute(select(User).where (User.email==data.email))).scalar_one_or_none()
+async def reset(userdata:resetdata, db: AsyncSession=Depends(get_db)):
+    data=(await db.execute(select(User).where (User.email==userdata.email))).scalar_one_or_none()
     if not data:
-        return data
         raise HTTPException(status_code=404, detail="Not Found")
-    passwordhash=hash_password(data.password)
+    passwordhash=hash_password(userdata.password)
     await db.execute(update(User).where(User.email==data.email).values(password_hash=passwordhash))
     await db.commit()
