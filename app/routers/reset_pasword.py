@@ -11,6 +11,7 @@ router=APIRouter(prefix="api/reset")
 async def reset(data:resetdata, db: AsyncSession=Depends(get_db)):
     data=(await db.execute(select(User).where (User.email==data.email))).scalar_one_or_none()
     if not data:
+        return data
         raise HTTPException(status_code=404, detail="Not Found")
     password_hash=hash_password(data.password)
     user=(await db.execute(update(User).where(User.email==data.email).values(password=password_hash)))
