@@ -15,3 +15,5 @@ async def reset(userdata:resetdata, db: AsyncSession=Depends(get_db)):
     passwordhash=hash_password(userdata.password)
     await db.execute(update(User).where(User.email==data.email).values(password_hash=passwordhash))
     await db.commit()
+    message="Password has been reset Successfully"
+    return message
