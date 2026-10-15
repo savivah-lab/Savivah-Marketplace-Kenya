@@ -7,6 +7,8 @@ from models.base import Base
 from core.db import engine
 # from core.config import settings
 from routers import auth, admin_auth, products, stores, checkout, reset_pasword, payments, orders, webhooks, admin, seller
+from routers.password_reset import router as password_reset_router
+app.include_router(password_reset_router)
 from workers.payout_sweep import run_sweep_job
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("savivah.main")
