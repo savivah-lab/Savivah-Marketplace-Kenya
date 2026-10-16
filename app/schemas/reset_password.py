@@ -3,6 +3,7 @@ from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 class ForgotData(BaseModel):
     email: EmailStr
+    password:str
 
 
 class ResetData(BaseModel):
