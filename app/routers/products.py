@@ -5,14 +5,14 @@ never be able to request the entire catalogue in one call.
 """
 import base64
 import uuid
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, Query, HTTPException
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.db import get_db
 from core.redis_client import get_redis
 from models.product import Product
 from models.store import Store
-from schemas.product import ProductOut, ProductPage
+from schemas.product import ProductOut, ProductPage, ProductUpdateRequest
 from services.cache import get_cached_products, set_cached_products
 
 router = APIRouter(prefix="/api/products", tags=["products"])
@@ -68,8 +68,7 @@ async def list_products(
         ProductOut(
             id=p.id, store_id=p.store_id, store_name=store_name, store_verified=store_verified,
             name=p.name, description=p.description, category=p.category,
-            price=float(p.price), stock=p.stock, image_url=p.image_url, image_urls=p.image_urls,
-            status=p.status,
+            price=float(p.price), stock=p.stock, image_url=p.image_url, status=p.status,
         )
         for p, store_name, store_verified in rows
     ]
@@ -78,3 +77,16 @@ async def list_products(
     page = ProductPage(items=items, next_cursor=next_cursor)
     await set_cached_products(redis, search, category, cursor, limit, page.model_dump(mode="json"))
     return page
+@router.post("/update")
+async def productupdate(data:ProductUpdateRequest, db: AsyncSession=Depends(get_db)):
+    info=(await db.execute(select(Product).where (Product.id==data.id))).scalar_one_or_none()
+    if not info:
+        raise HTTPException(status_code=404, detail="Product not found")
+    updateddate=(await db.execute(update(Product).where(Product.id==data.id).values(name=data.name,
+              description=data.description, category=data.category,
+              price=data.price, stock=data.stock, image_url=data.imageUrl,
+              status=data.status)))
+    db.commit()
+    db.refresh(updateddate)
+    message="Product has been update successfully"
+    return message
