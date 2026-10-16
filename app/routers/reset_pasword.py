@@ -17,3 +17,4 @@ async def reset(userdata:resetdata, db: AsyncSession=Depends(get_db)):
     await db.commit()
     message="Password has been reset Successfully"
     return message
+    
