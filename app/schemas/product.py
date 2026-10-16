@@ -38,6 +38,7 @@ class ProductCreateRequest(BaseModel):
 
 
 class ProductUpdateRequest(BaseModel):
+    id: uuid.UUID
     name: str | None = None
     description: str | None = None
     category: str | None = None
