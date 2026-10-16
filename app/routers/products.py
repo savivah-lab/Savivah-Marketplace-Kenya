@@ -82,11 +82,10 @@ async def productupdate(data:ProductUpdateRequest, db: AsyncSession=Depends(get_
     info=(await db.execute(select(Product).where (Product.id==data.id))).scalar_one_or_none()
     if not info:
         raise HTTPException(status_code=404, detail="Product not found")
-    updateddate=(await db.execute(update(Product).where(Product.id==data.id).values(name=data.name,
+    await db.execute(update(Product).where(Product.id==data.id).values(name=data.name,
               description=data.description, category=data.category,
               price=data.price, stock=data.stock, image_url=data.imageUrl,
-              status=data.status)))
-    db.commit()
-    db.refresh(updateddate)
+              status=data.status))
+    await db.commit()
     message="Product has been update successfully"
     return message
